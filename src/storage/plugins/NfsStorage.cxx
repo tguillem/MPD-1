@@ -323,6 +323,7 @@ Copy(StorageFileInfo &info, const struct nfsdirent &ent)
 		break;
 
 	case NF3DIR:
+	case NF3LNK:
 		info.type = StorageFileInfo::Type::DIRECTORY;
 		break;
 
