@@ -28,12 +28,12 @@
  * reasonable limit that doesn't make low-end machines suffer too
  * much, but doesn't cause stuttering on high-latency lines.
  */
-static const size_t NFS_MAX_BUFFERED = 512 * 1024;
+static const size_t NFS_MAX_BUFFERED = 1024 * 1024;
 
 /**
  * Resume the stream at this number of bytes after it has been paused.
  */
-static const size_t NFS_RESUME_AT = 384 * 1024;
+static const size_t NFS_RESUME_AT = 512 * 1024;
 
 class NfsInputStream final : NfsFileReader, public AsyncInputStream {
 	uint64_t next_offset;
