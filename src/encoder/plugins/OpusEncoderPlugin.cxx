@@ -25,7 +25,7 @@
 #include "system/ByteOrder.hxx"
 #include "util/StringUtil.hxx"
 
-#include <opus.h>
+#include <opus/opus.h>
 #include <ogg/ogg.h>
 
 #include <stdexcept>

@@ -34,7 +34,7 @@
 #include "util/RuntimeError.hxx"
 #include "Log.hxx"
 
-#include <opus.h>
+#include <opus/opus.h>
 #include <ogg/ogg.h>
 
 #include <string.h>
