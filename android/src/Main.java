@@ -21,12 +21,15 @@ package org.musicpd;
 
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -156,9 +159,35 @@ public class Main extends Service implements Runnable {
 		sendMessage(MSG_SEND_STATUS, mStatus, 0, mError);
 	}
 
+	@TargetApi(26)
+	private String createChannel() {
+		final NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+		if (notificationManager == null)
+			return null;
+
+		final String id = "org.musicpd";
+		final String name = "MPD service";
+		final int importance = NotificationManager.IMPORTANCE_DEFAULT;
+
+		final NotificationChannel channel = new NotificationChannel(id, name, importance);
+		notificationManager.createNotificationChannel(channel);
+		return id;
+	}
+
 	private void start() {
 		if (mThread != null)
 			return;
+
+		String channel;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+		{
+			channel = createChannel();
+			if (channel == null)
+				return;
+		}
+		else
+			channel = "";
+
 		mThread = new Thread(this);
 		mThread.start();
 
@@ -168,7 +197,7 @@ public class Main extends Service implements Runnable {
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				mainIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-		Notification notification = new Notification.Builder(this)
+		Notification notification = new Notification.Builder(this, channel)
 			.setContentTitle(getText(R.string.notification_title_mpd_running))
 			.setContentText(getText(R.string.notification_text_mpd_running))
 			.setSmallIcon(R.drawable.notification_icon)
