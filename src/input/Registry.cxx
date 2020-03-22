@@ -61,11 +61,11 @@ const InputPlugin *const input_plugins[] = {
 #ifdef ENABLE_QOBUZ
 	&qobuz_input_plugin,
 #endif
-#ifdef ENABLE_CURL
-	&input_plugin_curl,
-#endif
 #ifdef ENABLE_FFMPEG
 	&input_plugin_ffmpeg,
+#endif
+#ifdef ENABLE_CURL
+	&input_plugin_curl,
 #endif
 #ifdef ENABLE_SMBCLIENT
 	&input_plugin_smbclient,
