@@ -51,6 +51,8 @@ class FfmpegProject(Project):
         if toolchain.is_armv7:
             configure.append('--cpu=cortex-a8')
 
-        subprocess.check_call(configure, cwd=build, env=toolchain.env)
+        env = dict(toolchain.env)
+        env['PKG_CONFIG_LIBDIR'] = toolchain.install_prefix+'/lib/pkgconfig'
+        subprocess.check_call(configure, cwd=build, env=env)
         subprocess.check_call(['/usr/bin/make', '--quiet', '-j12'], cwd=build, env=toolchain.env)
         subprocess.check_call(['/usr/bin/make', '--quiet', 'install'], cwd=build, env=toolchain.env)

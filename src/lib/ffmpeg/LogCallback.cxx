@@ -60,6 +60,8 @@ FfmpegLogCallback(void *ptr, int level, const char *fmt, std::va_list vl)
 					 ffmpeg_domain.GetName(),
 					 cls->item_name(ptr));
 		const Domain d(domain);
-		LogFormatV(FfmpegImportLogLevel(level), d, fmt, vl);
+		LogLevel logLevel = FfmpegImportLogLevel(level);
+		if (logLevel != LogLevel::DEBUG)
+			LogFormatV(logLevel, d, fmt, vl);
 	}
 }

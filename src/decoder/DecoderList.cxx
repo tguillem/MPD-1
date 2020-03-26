@@ -59,6 +59,9 @@ const struct DecoderPlugin *const decoder_plugins[] = {
 #ifdef ENABLE_MPG123
 	&mpg123_decoder_plugin,
 #endif
+#ifdef ENABLE_FFMPEG
+	&ffmpeg_decoder_plugin,
+#endif
 #ifdef ENABLE_VORBIS_DECODER
 	&vorbis_decoder_plugin,
 #endif
@@ -106,9 +109,6 @@ const struct DecoderPlugin *const decoder_plugins[] = {
 #endif
 #ifdef ENABLE_ADPLUG
 	&adplug_decoder_plugin,
-#endif
-#ifdef ENABLE_FFMPEG
-	&ffmpeg_decoder_plugin,
 #endif
 #ifdef ENABLE_GME
 	&gme_decoder_plugin,

@@ -154,7 +154,6 @@ ffmpeg = FfmpegProject(
         '--disable-parser=mlp',
         '--disable-parser=mpeg4video',
         '--disable-parser=mpegvideo',
-        '--disable-parser=opus',
         '--disable-parser=vc1',
         '--disable-parser=vp3',
         '--disable-parser=vp8',
@@ -203,8 +202,8 @@ ffmpeg = FfmpegProject(
 
         # we don't need these decoders, because we have the dedicated
         # libraries
+        '--enable-libopus',
         '--disable-decoder=flac',
-        '--disable-decoder=opus',
         '--disable-decoder=vorbis',
 
         # audio codecs nobody uses
