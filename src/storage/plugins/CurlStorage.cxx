@@ -43,6 +43,8 @@
 #include "util/StringCompare.hxx"
 #include "util/StringFormat.hxx"
 #include "util/UriUtil.hxx"
+#include "util/Domain.hxx"
+#include "Log.hxx"
 
 #include <algorithm>
 #include <memory>
@@ -50,6 +52,8 @@
 #include <list>
 
 #include <assert.h>
+
+static constexpr Domain curl_domain("curl_storage");
 
 class CurlStorage final : public Storage {
 	const std::string base;
@@ -80,6 +84,7 @@ CurlStorage::MapUTF8(const char *uri_utf8) const noexcept
 		return base;
 
 	std::string path_esc = CurlEscapeUriPath(uri_utf8);
+	//FormatDebug(curl_domain, "Escape: '%s' > '%s'", uri_utf8, path_esc.c_str());
 	return PathTraitsUTF8::Build(base.c_str(), path_esc.c_str());
 }
 
@@ -402,7 +407,7 @@ private:
 			break;
 
 		case State::HREF:
-			response.href.assign(s, len);
+			response.href.append(s, len);
 			break;
 
 		case State::STATUS:
@@ -458,6 +463,7 @@ CurlStorage::GetInfo(const char *uri_utf8, gcc_unused bool follow)
 	// TODO: escape the given URI
 
 	const auto uri = MapUTF8(uri_utf8);
+	//FormatDebug(curl_domain, "GetInfo: '%s' > '%s'", uri_utf8, uri.c_str());
 	return HttpGetInfoOperation(*curl, uri.c_str()).Perform();
 }
 
@@ -482,7 +488,7 @@ class HttpListDirectoryOperation final : public PropfindOperation {
 public:
 	HttpListDirectoryOperation(CurlGlobal &curl, const char *uri)
 		:PropfindOperation(curl, uri, 1),
-		 base_path(UriPathOrSlash(uri)) {}
+		 base_path(CurlUnescape(GetEasy(), UriPathOrSlash(uri))) {}
 
 	std::unique_ptr<StorageDirectoryReader> Perform() {
 		DeferStart();
@@ -507,22 +513,34 @@ private:
 
 		/* kludge: ignoring case in this comparison to avoid
 		   false negatives if the web server uses a different
-		   case in hex digits in escaped characters; TODO:
-		   implement properly */
+		   case */
+//FormatDebug(curl_domain, "HrefToEscapedName: '%s' vs '%s'", path, base_path.c_str());
 		path = StringAfterPrefixIgnoreCase(path, base_path.c_str());
 		if (path == nullptr || *path == 0)
+		{
+			//FormatDebug(curl_domain, "KO");
 			return nullptr;
+		}
 
 		const char *slash = strchr(path, '/');
 		if (slash == nullptr)
+		{
 			/* regular file */
+			//FormatDebug(curl_domain, "OK");
 			return path;
+		}
 		else if (slash[1] == 0)
+		{
 			/* trailing slash: collection; strip the slash */
+			//FormatDebug(curl_domain, "OK1");
 			return {path, slash};
+		}
 		else
+		{
 			/* strange, better ignore it */
+			//FormatDebug(curl_domain, "KO1");
 			return nullptr;
+		}
 	}
 
 protected:
@@ -530,12 +548,14 @@ protected:
 	void OnDavResponse(DavResponse &&r) override {
 		if (r.status != 200)
 			return;
-
-		const auto escaped_name = HrefToEscapedName(r.href.c_str());
+		std::string href = CurlUnescape(GetEasy(), r.href.c_str());
+		const auto escaped_name = HrefToEscapedName(href.c_str());
 		if (escaped_name.IsNull())
 			return;
 
-		entries.emplace_front(CurlUnescape(GetEasy(), escaped_name));
+		// TODO avoid extra alloc
+		std::string name(escaped_name.data, escaped_name.size);
+		entries.emplace_front(name.c_str());
 
 		auto &info = entries.front().info;
 		info = StorageFileInfo(r.collection
@@ -550,6 +570,7 @@ std::unique_ptr<StorageDirectoryReader>
 CurlStorage::OpenDirectory(const char *uri_utf8)
 {
 	std::string uri = MapUTF8(uri_utf8);
+	//FormatDebug(curl_domain, "OpenDirectory: '%s' > '%s'", uri_utf8, uri.c_str());
 
 	/* collection URIs must end with a slash */
 	if (uri.back() != '/')

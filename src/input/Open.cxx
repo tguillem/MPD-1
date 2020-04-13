@@ -25,7 +25,10 @@
 #include "RewindInputStream.hxx"
 #include "fs/Traits.hxx"
 #include "fs/AllocatedPath.hxx"
+#include "util/Domain.hxx"
+#include "Log.hxx"
 
+static constexpr Domain is_domain("is");
 #include <stdexcept>
 
 InputStreamPtr
@@ -52,6 +55,7 @@ InputStreamPtr
 InputStream::OpenReady(const char *uri, Mutex &mutex)
 {
 	CondInputStreamHandler handler;
+	FormatDebug(is_domain, "open: '%s'", uri);
 
 	auto is = Open(uri, mutex);
 	is->SetHandler(&handler);
